@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚐 房车物品清单</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            color: white;
+            padding: 20px 0;
+        }
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        .progress-bar {
+            background: rgba(255,255,255,0.3);
+            border-radius: 20px;
+            height: 20px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+        .progress-fill {
+            background: linear-gradient(90deg, #43e97b, #38f9d7);
+            height: 100%;
+            border-radius: 20px;
+            transition: width 0.3s ease;
+        }
+        .progress-text {
+            color: white;
+            font-size: 0.9em;
+        }
+        .category {
+            background: white;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+        .category-header {
+            padding: 15px 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+        .category-header:hover {
+            background: #f8f9fa;
+        }
+        .category-header h2 {
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .category-count {
+            background: #667eea;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 0.85em;
+        }
+        .category-count.complete {
+            background: #43e97b;
+        }
+        .toggle-icon {
+            font-size: 1.2em;
+            transition: transform 0.3s;
+        }
+        .category.collapsed .toggle-icon {
+            transform: rotate(-90deg);
+        }
+        .category.collapsed .category-content {
+            display: none;
+        }
+        .category-content {
+            padding: 0 20px 15px 20px;
+        }
+        .subcategory {
+            margin-top: 15px;
+        }
+        .subcategory h3 {
+            font-size: 0.9em;
+            color: #888;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        .item {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+            gap: 12px;
+        }
+        .item:last-child {
+            border-bottom: none;
+        }
+        .item input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+        .item label {
+            flex: 1;
+            cursor: pointer;
+            font-size: 0.95em;
+        }
+        .item.checked label {
+            text-decoration: line-through;
+            color: #aaa;
+        }
+        .item .delete-btn {
+            background: none;
+            border: none;
+            color: #ddd;
+            cursor: pointer;
+            font-size: 1.2em;
+            padding: 5px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .item:hover .delete-btn {
+            opacity: 1;
+        }
+        .item .delete-btn:hover {
+            color: #f5576c;
+        }
+        .add-item {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed #ddd;
+        }
+        .add-item input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            font-size: 0.9em;
+            outline: none;
+        }
+        .add-item input:focus {
+            border-color: #667eea;
+        }
+        .add-item button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        .add-item button:hover {
+            opacity: 0.9;
+        }
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .actions button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        .btn-reset {
+            background: white;
+            color: #667eea;
+        }
+        .btn-clear-checked {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+        .footer {
+            text-align: center;
+            color: white;
+            padding: 20px;
+            opacity: 0.7;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚐 房车物品清单</h1>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text"><span id="checkedCount">0</span> / <span id="totalCount">0</span> 已完成</div>
+        </div>
+
+        <div class="actions">
+            <button class="btn-reset" onclick="resetAll()">🔄 重置全部</button>
+            <button class="btn-clear-checked" onclick="clearChecked()">🗑️ 清除已勾选</button>
+        </div>
+
+        <div id="categories"></div>
+
+        <div class="footer">
+            数据自动保存在本地<br>
+            2026春节房车行程配套清单
+        </div>
+    </div>
+
+    <script>
+        // 初始数据
+        const initialData = {
+            "🍜 食物": {
+                "主食/干粮": [
+                    "方便面/自热米饭 ×10",
+                    "面包/蛋糕",
+                    "饼干 ×多包",
+                    "八宝粥 ×6罐"
+                ],
+                "零食（孩子）": [
+                    "小馒头、溶豆",
+                    "果泥、肉泥（2岁）",
+                    "奶酪棒",
+                    "水果条/果干",
+                    "小饼干分装包"
+                ],
+                "饮品": [
+                    "矿泉水 ×2箱",
+                    "牛奶/奶粉",
+                    "保温壶 ×2",
+                    "姜茶包"
+                ]
+            },
+            "🍳 做饭/厨房": {
+                "锅具": [
+                    "电火锅/多功能锅",
+                    "小炒锅/平底锅",
+                    "小奶锅（煮粥、热奶）",
+                    "电饭煲（小型）"
+                ],
+                "炉具": [
+                    "卡式炉",
+                    "气罐 ×4-6罐",
+                    "防风板"
+                ],
+                "餐具": [
+                    "碗 ×6",
+                    "盘子 ×4",
+                    "筷子 ×6双",
+                    "勺子 ×6",
+                    "叉子 ×4",
+                    "儿童餐具（2岁）",
+                    "水果刀 + 砧板",
+                    "剪刀",
+                    "开瓶器"
+                ],
+                "烹饪工具": [
+                    "锅铲",
+                    "汤勺",
+                    "漏勺",
+                    "食品夹"
+                ],
+                "调味料": [
+                    "盐",
+                    "酱油（小瓶）",
+                    "醋",
+                    "食用油（小瓶）",
+                    "火锅底料 ×3包",
+                    "蘸料（芝麻酱等）",
+                    "老干妈",
+                    "蚝油/生抽"
+                ],
+                "食材储备": [
+                    "挂面/方便面",
+                    "米（小袋）",
+                    "鸡蛋",
+                    "火腿肠",
+                    "榨菜/咸菜",
+                    "速冻丸子",
+                    "午餐肉罐头"
+                ],
+                "保鲜/收纳": [
+                    "保鲜袋",
+                    "保鲜膜",
+                    "密封盒 ×若干",
+                    "车载冰箱/保温箱"
+                ],
+                "厨房清洁": [
+                    "洗洁精",
+                    "洗碗布/海绵",
+                    "钢丝球",
+                    "厨房纸巾"
+                ]
+            },
+            "🏠 住": {
+                "床品": [
+                    "被子/睡袋",
+                    "枕头",
+                    "床单/隔脏睡袋",
+                    "毛毯"
+                ],
+                "洗漱": [
+                    "牙刷牙膏 ×6",
+                    "毛巾 ×6",
+                    "浴巾 ×4",
+                    "洗发水、沐浴露",
+                    "护肤品"
+                ],
+                "2岁宝宝专用": [
+                    "尿不湿 ×3大包",
+                    "湿巾 ×5包",
+                    "干纸巾 ×多包",
+                    "儿童马桶圈/便盆",
+                    "奶瓶/水杯",
+                    "辅食碗勺",
+                    "围嘴 ×5"
+                ],
+                "清洁": [
+                    "垃圾袋 ×多卷",
+                    "纸巾、卷纸",
+                    "消毒湿巾",
+                    "抹布"
+                ],
+                "电器": [
+                    "车载烧水壶",
+                    "充电宝 ×2",
+                    "各种充电线",
+                    "手电筒"
+                ]
+            },
+            "🚗 行": {
+                "证件": [
+                    "身份证 ×6",
+                    "驾照 ×2",
+                    "行驶证",
+                    "医保卡 ×6"
+                ],
+                "导航": [
+                    "手机支架",
+                    "离线地图（提前下载）"
+                ],
+                "车辆工具": [
+                    "搭电线",
+                    "灭火器（检查有效期）",
+                    "三角警示牌",
+                    "反光背心"
+                ],
+                "儿童安全": [
+                    "安全座椅（2岁）",
+                    "增高垫（7岁）",
+                    "车窗遮阳帘"
+                ],
+                "娱乐": [
+                    "iPad + 动画片",
+                    "儿童耳机 ×2",
+                    "绘本 ×5",
+                    "贴纸书/涂色书",
+                    "小玩具"
+                ]
+            },
+            "💊 医药": {
+                "常用药": [
+                    "退烧药（美林）",
+                    "感冒药（大人+儿童）",
+                    "止泻药（蒙脱石散）",
+                    "益生菌",
+                    "晕车药",
+                    "创可贴",
+                    "碘伏棉片",
+                    "体温计"
+                ],
+                "老人用药": [
+                    "日常药物（按需）"
+                ],
+                "其他": [
+                    "口罩",
+                    "免洗洗手液"
+                ]
+            },
+            "📸 其他": {
+                "杂项": [
+                    "相机/充电器",
+                    "自拍杆",
+                    "现金（少量）",
+                    "保温杯 ×4",
+                    "折叠推车（2岁）",
+                    "背带/腰凳",
+                    "雨伞 ×4",
+                    "暖宝宝 ×20片"
+                ]
+            }
+        };
+
+        // 从localStorage加载或使用初始数据
+        let data = JSON.parse(localStorage.getItem('rvChecklist')) || {};
+        let checkedItems = JSON.parse(localStorage.getItem('rvCheckedItems')) || {};
+
+        // 初始化数据
+        if (Object.keys(data).length === 0) {
+            data = JSON.parse(JSON.stringify(initialData));
+            saveData();
+        }
+
+        function saveData() {
+            localStorage.setItem('rvChecklist', JSON.stringify(data));
+            localStorage.setItem('rvCheckedItems', JSON.stringify(checkedItems));
+        }
+
+        function getItemId(category, subcategory, item) {
+            return `${category}-${subcategory}-${item}`.replace(/\s/g, '_');
+        }
+
+        function renderCategories() {
+            const container = document.getElementById('categories');
+            container.innerHTML = '';
+
+            let totalItems = 0;
+            let checkedCount = 0;
+
+            for (const [categoryName, subcategories] of Object.entries(data)) {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'category';
+
+                let categoryTotal = 0;
+                let categoryChecked = 0;
+
+                // 计算分类统计
+                for (const [subName, items] of Object.entries(subcategories)) {
+                    categoryTotal += items.length;
+                    items.forEach(item => {
+                        const id = getItemId(categoryName, subName, item);
+                        if (checkedItems[id]) categoryChecked++;
+                    });
+                }
+
+                totalItems += categoryTotal;
+                checkedCount += categoryChecked;
+
+                const isComplete = categoryChecked === categoryTotal && categoryTotal > 0;
+
+                categoryDiv.innerHTML = `
+                    <div class="category-header" onclick="toggleCategory(this)">
+                        <h2>${categoryName}</h2>
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <span class="category-count ${isComplete ? 'complete' : ''}">${categoryChecked}/${categoryTotal}</span>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                    </div>
+                    <div class="category-content">
+                        ${Object.entries(subcategories).map(([subName, items]) => `
+                            <div class="subcategory">
+                                <h3>${subName}</h3>
+                                ${items.map(item => {
+                                    const id = getItemId(categoryName, subName, item);
+                                    const isChecked = checkedItems[id];
+                                    return `
+                                        <div class="item ${isChecked ? 'checked' : ''}">
+                                            <input type="checkbox" id="${id}" ${isChecked ? 'checked' : ''} 
+                                                onchange="toggleItem('${categoryName}', '${subName}', '${item.replace(/'/g, "\\'")}')">
+                                            <label for="${id}">${item}</label>
+                                            <button class="delete-btn" onclick="deleteItem('${categoryName}', '${subName}', '${item.replace(/'/g, "\\'")}')">×</button>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        `).join('')}
+                        <div class="add-item">
+                            <input type="text" placeholder="添加新物品..." id="newItem-${categoryName.replace(/\s/g, '_')}" 
+                                onkeypress="if(event.key==='Enter')addItem('${categoryName}')">
+                            <button onclick="addItem('${categoryName}')">添加</button>
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(categoryDiv);
+            }
+
+            // 更新进度条
+            document.getElementById('checkedCount').textContent = checkedCount;
+            document.getElementById('totalCount').textContent = totalItems;
+            const percentage = totalItems > 0 ? (checkedCount / totalItems * 100) : 0;
+            document.getElementById('progressFill').style.width = percentage + '%';
+        }
+
+        function toggleCategory(header) {
+            header.parentElement.classList.toggle('collapsed');
+        }
+
+        function toggleItem(category, subcategory, item) {
+            const id = getItemId(category, subcategory, item);
+            checkedItems[id] = !checkedItems[id];
+            saveData();
+            renderCategories();
+        }
+
+        function deleteItem(category, subcategory, item) {
+            if (confirm(`确定删除"${item}"吗？`)) {
+                const index = data[category][subcategory].indexOf(item);
+                if (index > -1) {
+                    data[category][subcategory].splice(index, 1);
+                    const id = getItemId(category, subcategory, item);
+                    delete checkedItems[id];
+                    saveData();
+                    renderCategories();
+                }
+            }
+        }
+
+        function addItem(category) {
+            const inputId = `newItem-${category.replace(/\s/g, '_')}`;
+            const input = document.getElementById(inputId);
+            const item = input.value.trim();
+            
+            if (item) {
+                // 添加到第一个子分类
+                const firstSubcategory = Object.keys(data[category])[0];
+                data[category][firstSubcategory].push(item);
+                saveData();
+                renderCategories();
+                
+                // 清空输入框
+                setTimeout(() => {
+                    document.getElementById(inputId).value = '';
+                }, 0);
+            }
+        }
+
+        function resetAll() {
+            if (confirm('确定重置所有勾选状态吗？')) {
+                checkedItems = {};
+                saveData();
+                renderCategories();
+            }
+        }
+
+        function clearChecked() {
+            if (confirm('确定清除所有已勾选的物品吗？这将从列表中删除它们。')) {
+                for (const [category, subcategories] of Object.entries(data)) {
+                    for (const [subName, items] of Object.entries(subcategories)) {
+                        data[category][subName] = items.filter(item => {
+                            const id = getItemId(category, subName, item);
+                            return !checkedItems[id];
+                        });
+                    }
+                }
+                checkedItems = {};
+                saveData();
+                renderCategories();
+            }
+        }
+
+        // 初始渲染
+        renderCategories();
+    </script>
+</body>
+</html>
