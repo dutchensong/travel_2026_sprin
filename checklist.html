@@ -29,6 +29,22 @@
             font-size: 2em;
             margin-bottom: 10px;
         }
+        .sync-status {
+            font-size: 0.85em;
+            margin-bottom: 10px;
+            padding: 5px 15px;
+            border-radius: 15px;
+            display: inline-block;
+        }
+        .sync-status.synced {
+            background: rgba(67, 233, 123, 0.3);
+        }
+        .sync-status.syncing {
+            background: rgba(255, 193, 7, 0.3);
+        }
+        .sync-status.error {
+            background: rgba(245, 87, 108, 0.3);
+        }
         .progress-bar {
             background: rgba(255,255,255,0.3);
             border-radius: 20px;
@@ -178,6 +194,7 @@
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
+            flex-wrap: wrap;
         }
         .actions button {
             flex: 1;
@@ -186,12 +203,13 @@
             border-radius: 10px;
             cursor: pointer;
             font-size: 0.9em;
+            min-width: 100px;
         }
         .btn-reset {
             background: white;
             color: #667eea;
         }
-        .btn-clear-checked {
+        .btn-refresh {
             background: rgba(255,255,255,0.2);
             color: white;
         }
@@ -208,6 +226,7 @@
     <div class="container">
         <div class="header">
             <h1>🚐 房车物品清单</h1>
+            <div class="sync-status synced" id="syncStatus">☁️ 已同步</div>
             <div class="progress-bar">
                 <div class="progress-fill" id="progressFill"></div>
             </div>
@@ -215,215 +234,257 @@
         </div>
 
         <div class="actions">
-            <button class="btn-reset" onclick="resetAll()">🔄 重置全部</button>
-            <button class="btn-clear-checked" onclick="clearChecked()">🗑️ 清除已勾选</button>
+            <button class="btn-refresh" onclick="loadFromCloud()">🔄 刷新同步</button>
+            <button class="btn-reset" onclick="resetAll()">↩️ 重置勾选</button>
         </div>
 
         <div id="categories"></div>
 
         <div class="footer">
-            数据自动保存在本地<br>
+            ☁️ 数据自动云端同步<br>
+            点击"刷新同步"查看他人更新<br>
             2026春节房车行程配套清单
         </div>
     </div>
 
     <script>
+        // JSONBin 配置
+        const JSONBIN_BIN_ID = '6981d89aae596e708f0dd010';
+        const JSONBIN_API_KEY = '$2a$10$SpbN3KQaiupVhConl6cF7.lS2XPMR3S5Bnue5PnqCfOe.z/sIE.ES';
+        const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
+
         // 初始数据
         const initialData = {
-            "🍜 食物": {
-                "主食/干粮": [
-                    "方便面/自热米饭 ×10",
-                    "面包/蛋糕",
-                    "饼干 ×多包",
-                    "八宝粥 ×6罐"
-                ],
-                "零食（孩子）": [
-                    "小馒头、溶豆",
-                    "果泥、肉泥（2岁）",
-                    "奶酪棒",
-                    "水果条/果干",
-                    "小饼干分装包"
-                ],
-                "饮品": [
-                    "矿泉水 ×2箱",
-                    "牛奶/奶粉",
-                    "保温壶 ×2",
-                    "姜茶包"
-                ]
-            },
-            "🍳 做饭/厨房": {
-                "锅具": [
-                    "电火锅/多功能锅",
-                    "小炒锅/平底锅",
-                    "小奶锅（煮粥、热奶）",
-                    "电饭煲（小型）"
-                ],
-                "炉具": [
-                    "卡式炉",
-                    "气罐 ×4-6罐",
-                    "防风板"
-                ],
-                "餐具": [
-                    "碗 ×6",
-                    "盘子 ×4",
-                    "筷子 ×6双",
-                    "勺子 ×6",
-                    "叉子 ×4",
-                    "儿童餐具（2岁）",
-                    "水果刀 + 砧板",
-                    "剪刀",
-                    "开瓶器"
-                ],
-                "烹饪工具": [
-                    "锅铲",
-                    "汤勺",
-                    "漏勺",
-                    "食品夹"
-                ],
-                "调味料": [
-                    "盐",
-                    "酱油（小瓶）",
-                    "醋",
-                    "食用油（小瓶）",
+            "📍 厨房顶部吊柜 1（烹饪相关）": {
+                "物品": [
+                    "调味料全套（盐、酱油、醋、油、老干妈、蚝油）",
                     "火锅底料 ×3包",
                     "蘸料（芝麻酱等）",
-                    "老干妈",
-                    "蚝油/生抽"
-                ],
-                "食材储备": [
-                    "挂面/方便面",
-                    "米（小袋）",
-                    "鸡蛋",
-                    "火腿肠",
-                    "榨菜/咸菜",
-                    "速冻丸子",
-                    "午餐肉罐头"
-                ],
-                "保鲜/收纳": [
-                    "保鲜袋",
-                    "保鲜膜",
-                    "密封盒 ×若干",
-                    "车载冰箱/保温箱"
-                ],
-                "厨房清洁": [
-                    "洗洁精",
-                    "洗碗布/海绵",
-                    "钢丝球",
-                    "厨房纸巾"
+                    "锅铲、汤勺、漏勺、食品夹",
+                    "水果刀 + 砧板",
+                    "剪刀、开瓶器"
                 ]
             },
-            "🏠 住": {
+            "📍 厨房顶部吊柜 2（餐具+干货）": {
+                "物品": [
+                    "碗 ×6、盘子 ×4",
+                    "筷子 ×6、勺子 ×6、叉子 ×4",
+                    "儿童餐具（2岁）",
+                    "挂面/方便面",
+                    "米（小袋）",
+                    "八宝粥 ×6罐",
+                    "厨房纸巾",
+                    "洗洁精、洗碗布、钢丝球"
+                ]
+            },
+            "📍 客厅吊柜 1（洗漱+护肤）": {
+                "物品": [
+                    "牙刷牙膏 ×6",
+                    "毛巾 ×6",
+                    "浴巾 ×4",
+                    "洗发水、沐浴露",
+                    "护肤品",
+                    "纸巾、卷纸",
+                    "消毒湿巾"
+                ]
+            },
+            "📍 客厅吊柜 2（医药+应急）": {
+                "物品": [
+                    "退烧药（美林）",
+                    "感冒药（大人+儿童）",
+                    "止泻药（蒙脱石散）",
+                    "益生菌",
+                    "晕车药",
+                    "创可贴、碘伏棉片",
+                    "体温计",
+                    "老人日常药物",
+                    "口罩",
+                    "免洗洗手液"
+                ]
+            },
+            "📍 客厅吊柜 3（宝宝专区）": {
+                "物品": [
+                    "尿不湿 ×1包（其余放后备箱）",
+                    "湿巾 ×2包（其余放后备箱）",
+                    "干纸巾",
+                    "奶瓶/水杯",
+                    "辅食碗勺",
+                    "围嘴 ×5",
+                    "儿童马桶圈/便盆"
+                ]
+            },
+            "📍 冰箱（开电 - 保鲜用）": {
+                "物品": [
+                    "鸡蛋",
+                    "牛奶",
+                    "速冻丸子（火锅用）",
+                    "火腿肠",
+                    "新鲜蔬菜水果（路上买）"
+                ]
+            },
+            "📍 冰箱（不开电 - 当储物柜）": {
+                "物品": [
+                    "面包/蛋糕",
+                    "饼干 ×多包",
+                    "孩子零食（小馒头、溶豆、奶酪棒）",
+                    "果泥、肉泥",
+                    "水果条/果干",
+                    "榨菜/咸菜",
+                    "午餐肉罐头",
+                    "保鲜袋、保鲜膜"
+                ]
+            },
+            "📍 后备箱": {
                 "床品": [
                     "被子/睡袋",
                     "枕头",
                     "床单/隔脏睡袋",
                     "毛毯"
                 ],
-                "洗漱": [
-                    "牙刷牙膏 ×6",
-                    "毛巾 ×6",
-                    "浴巾 ×4",
-                    "洗发水、沐浴露",
-                    "护肤品"
+                "锅具": [
+                    "电火锅/多功能锅",
+                    "小炒锅/平底锅",
+                    "小奶锅",
+                    "电饭煲"
                 ],
-                "2岁宝宝专用": [
-                    "尿不湿 ×3大包",
-                    "湿巾 ×5包",
-                    "干纸巾 ×多包",
-                    "儿童马桶圈/便盆",
-                    "奶瓶/水杯",
-                    "辅食碗勺",
-                    "围嘴 ×5"
+                "炉具": [
+                    "卡式炉",
+                    "气罐 ×4-6罐",
+                    "防风板"
                 ],
-                "清洁": [
+                "大件": [
+                    "车载冰箱/保温箱",
+                    "矿泉水 ×2箱",
+                    "折叠推车（2岁）",
+                    "背带/腰凳",
+                    "雨伞 ×4"
+                ],
+                "备用物资": [
+                    "尿不湿 ×2包（备用）",
+                    "湿巾 ×3包（备用）",
                     "垃圾袋 ×多卷",
-                    "纸巾、卷纸",
-                    "消毒湿巾",
-                    "抹布"
+                    "抹布",
+                    "暖宝宝 ×20片",
+                    "密封盒 ×若干"
                 ],
-                "电器": [
-                    "车载烧水壶",
-                    "充电宝 ×2",
-                    "各种充电线",
-                    "手电筒"
+                "儿童安全": [
+                    "安全座椅（2岁）",
+                    "增高垫（7岁）"
                 ]
             },
-            "🚗 行": {
+            "📍 小工具箱（随手取用）": {
                 "证件": [
                     "身份证 ×6",
                     "驾照 ×2",
                     "行驶证",
-                    "医保卡 ×6"
+                    "医保卡 ×6",
+                    "现金（少量）"
                 ],
-                "导航": [
-                    "手机支架",
-                    "离线地图（提前下载）"
+                "电子设备": [
+                    "充电宝 ×2",
+                    "各种充电线",
+                    "手电筒",
+                    "手机支架"
                 ],
                 "车辆工具": [
                     "搭电线",
-                    "灭火器（检查有效期）",
+                    "灭火器",
                     "三角警示牌",
                     "反光背心"
                 ],
-                "儿童安全": [
-                    "安全座椅（2岁）",
-                    "增高垫（7岁）",
-                    "车窗遮阳帘"
-                ],
+                "其他": [
+                    "相机/充电器",
+                    "自拍杆"
+                ]
+            },
+            "📍 床上（白天放，睡前收）": {
                 "娱乐": [
                     "iPad + 动画片",
                     "儿童耳机 ×2",
                     "绘本 ×5",
                     "贴纸书/涂色书",
                     "小玩具"
-                ]
-            },
-            "💊 医药": {
-                "常用药": [
-                    "退烧药（美林）",
-                    "感冒药（大人+儿童）",
-                    "止泻药（蒙脱石散）",
-                    "益生菌",
-                    "晕车药",
-                    "创可贴",
-                    "碘伏棉片",
-                    "体温计"
                 ],
-                "老人用药": [
-                    "日常药物（按需）"
-                ],
-                "其他": [
-                    "口罩",
-                    "免洗洗手液"
-                ]
-            },
-            "📸 其他": {
-                "杂项": [
-                    "相机/充电器",
-                    "自拍杆",
-                    "现金（少量）",
+                "随用": [
+                    "保温壶 ×2（装热水）",
                     "保温杯 ×4",
-                    "折叠推车（2岁）",
-                    "背带/腰凳",
-                    "雨伞 ×4",
-                    "暖宝宝 ×20片"
+                    "姜茶包",
+                    "车窗遮阳帘"
+                ]
+            },
+            "📍 固定位置": {
+                "物品": [
+                    "车载烧水壶（方便取用处）"
                 ]
             }
         };
 
-        // 从localStorage加载或使用初始数据
-        let data = JSON.parse(localStorage.getItem('rvChecklist')) || {};
-        let checkedItems = JSON.parse(localStorage.getItem('rvCheckedItems')) || {};
+        let data = JSON.parse(JSON.stringify(initialData));
+        let checkedItems = {};
+        let saveTimeout = null;
 
-        // 初始化数据
-        if (Object.keys(data).length === 0) {
-            data = JSON.parse(JSON.stringify(initialData));
-            saveData();
+        // 更新同步状态显示
+        function setSyncStatus(status, text) {
+            const el = document.getElementById('syncStatus');
+            el.className = 'sync-status ' + status;
+            el.textContent = text;
         }
 
-        function saveData() {
-            localStorage.setItem('rvChecklist', JSON.stringify(data));
-            localStorage.setItem('rvCheckedItems', JSON.stringify(checkedItems));
+        // 从云端加载
+        async function loadFromCloud() {
+            setSyncStatus('syncing', '⏳ 同步中...');
+            try {
+                const response = await fetch(JSONBIN_URL + '/latest', {
+                    headers: {
+                        'X-Access-Key': JSONBIN_API_KEY
+                    }
+                });
+                const result = await response.json();
+                if (result.record && result.record.checkedItems) {
+                    checkedItems = result.record.checkedItems;
+                    if (result.record.data) {
+                        data = result.record.data;
+                    }
+                }
+                setSyncStatus('synced', '☁️ 已同步');
+                renderCategories();
+            } catch (e) {
+                console.error('Load error:', e);
+                setSyncStatus('error', '❌ 同步失败');
+            }
+        }
+
+        // 保存到云端
+        async function saveToCloud() {
+            setSyncStatus('syncing', '⏳ 保存中...');
+            try {
+                const response = await fetch(JSONBIN_URL, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Access-Key': JSONBIN_API_KEY
+                    },
+                    body: JSON.stringify({
+                        checkedItems: checkedItems,
+                        data: data,
+                        lastUpdated: new Date().toISOString()
+                    })
+                });
+                if (response.ok) {
+                    setSyncStatus('synced', '☁️ 已同步');
+                } else {
+                    setSyncStatus('error', '❌ 保存失败');
+                }
+            } catch (e) {
+                console.error('Save error:', e);
+                setSyncStatus('error', '❌ 保存失败');
+            }
+        }
+
+        // 防抖保存
+        function debouncedSave() {
+            if (saveTimeout) clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(saveToCloud, 1000);
         }
 
         function getItemId(category, subcategory, item) {
@@ -444,7 +505,6 @@
                 let categoryTotal = 0;
                 let categoryChecked = 0;
 
-                // 计算分类统计
                 for (const [subName, items] of Object.entries(subcategories)) {
                     categoryTotal += items.length;
                     items.forEach(item => {
@@ -485,7 +545,7 @@
                             </div>
                         `).join('')}
                         <div class="add-item">
-                            <input type="text" placeholder="添加新物品..." id="newItem-${categoryName.replace(/\s/g, '_')}" 
+                            <input type="text" placeholder="添加新物品..." id="newItem-${categoryName.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_')}" 
                                 onkeypress="if(event.key==='Enter')addItem('${categoryName}')">
                             <button onclick="addItem('${categoryName}')">添加</button>
                         </div>
@@ -495,7 +555,6 @@
                 container.appendChild(categoryDiv);
             }
 
-            // 更新进度条
             document.getElementById('checkedCount').textContent = checkedCount;
             document.getElementById('totalCount').textContent = totalItems;
             const percentage = totalItems > 0 ? (checkedCount / totalItems * 100) : 0;
@@ -509,8 +568,8 @@
         function toggleItem(category, subcategory, item) {
             const id = getItemId(category, subcategory, item);
             checkedItems[id] = !checkedItems[id];
-            saveData();
             renderCategories();
+            debouncedSave();
         }
 
         function deleteItem(category, subcategory, item) {
@@ -520,27 +579,26 @@
                     data[category][subcategory].splice(index, 1);
                     const id = getItemId(category, subcategory, item);
                     delete checkedItems[id];
-                    saveData();
                     renderCategories();
+                    debouncedSave();
                 }
             }
         }
 
         function addItem(category) {
-            const inputId = `newItem-${category.replace(/\s/g, '_')}`;
+            const inputId = `newItem-${category.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_')}`;
             const input = document.getElementById(inputId);
             const item = input.value.trim();
             
             if (item) {
-                // 添加到第一个子分类
                 const firstSubcategory = Object.keys(data[category])[0];
                 data[category][firstSubcategory].push(item);
-                saveData();
                 renderCategories();
+                debouncedSave();
                 
-                // 清空输入框
                 setTimeout(() => {
-                    document.getElementById(inputId).value = '';
+                    const newInput = document.getElementById(inputId);
+                    if (newInput) newInput.value = '';
                 }, 0);
             }
         }
@@ -548,29 +606,13 @@
         function resetAll() {
             if (confirm('确定重置所有勾选状态吗？')) {
                 checkedItems = {};
-                saveData();
                 renderCategories();
+                debouncedSave();
             }
         }
 
-        function clearChecked() {
-            if (confirm('确定清除所有已勾选的物品吗？这将从列表中删除它们。')) {
-                for (const [category, subcategories] of Object.entries(data)) {
-                    for (const [subName, items] of Object.entries(subcategories)) {
-                        data[category][subName] = items.filter(item => {
-                            const id = getItemId(category, subName, item);
-                            return !checkedItems[id];
-                        });
-                    }
-                }
-                checkedItems = {};
-                saveData();
-                renderCategories();
-            }
-        }
-
-        // 初始渲染
-        renderCategories();
+        // 初始化：从云端加载
+        loadFromCloud();
     </script>
 </body>
 </html>
