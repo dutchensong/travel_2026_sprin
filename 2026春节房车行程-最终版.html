@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026春节房车行程 - 北京→贵州环线</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            color: white;
+            padding: 30px 0;
+        }
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .header .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        .info-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .info-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .info-card .number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .info-card .label {
+            color: #666;
+            font-size: 0.9em;
+        }
+        .section-title {
+            color: white;
+            font-size: 1.5em;
+            margin: 30px 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(255,255,255,0.3);
+        }
+        .day-card {
+            background: white;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .day-header {
+            padding: 20px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .day-header.driving {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        .day-header.sightseeing {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        .day-header.festival {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+        .day-header.mixed {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+        .day-number {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+        .day-date {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        .day-content {
+            padding: 20px;
+        }
+        .route {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .location {
+            background: #f0f0f0;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+        .location.highlight {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .arrow {
+            color: #667eea;
+            font-size: 1.2em;
+        }
+        .details {
+            color: #666;
+            line-height: 1.8;
+        }
+        .details .distance {
+            display: inline-block;
+            background: #e8f4f8;
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 0.85em;
+            color: #0066cc;
+            margin: 5px 0;
+        }
+        .activities {
+            margin-top: 15px;
+        }
+        .activity {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .activity-icon {
+            font-size: 1.3em;
+        }
+        .activity-text {
+            flex: 1;
+        }
+        .food-section {
+            background: #fff9e6;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        .food-section h4 {
+            color: #e67e00;
+            margin-bottom: 8px;
+        }
+        .option-box {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .option-box h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .option-box.option-a {
+            border-left: 5px solid #43e97b;
+        }
+        .option-box.option-b {
+            border-left: 5px solid #f5576c;
+        }
+        .option-summary {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        .option-day {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .option-day:last-child {
+            border-bottom: none;
+        }
+        .option-day .day-label {
+            font-weight: bold;
+            color: #667eea;
+        }
+        .option-day .route-text {
+            color: #333;
+            margin: 5px 0;
+        }
+        .option-day .distance-text {
+            color: #888;
+            font-size: 0.9em;
+        }
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .comparison-table th, .comparison-table td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+        .comparison-table th {
+            background: #667eea;
+            color: white;
+        }
+        .comparison-table tr:hover {
+            background: #f8f9fa;
+        }
+        .tips-section {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-top: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .tips-section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .tip-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .tip-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .tip-item h4 {
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .tip-item p {
+            color: #666;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+        .footer {
+            text-align: center;
+            color: white;
+            padding: 30px;
+            opacity: 0.8;
+        }
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .day-card, .tips-section, .option-box {
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚐 2026春节房车行程</h1>
+            <div class="subtitle">北京 → 贵州环线 · 一家六口 · 12天</div>
+            <div class="subtitle" style="margin-top:10px; font-size:1em;">2月12日 - 2月23日</div>
+        </div>
+
+        <div class="info-cards">
+            <div class="info-card">
+                <div class="number">12</div>
+                <div class="label">总天数</div>
+            </div>
+            <div class="info-card">
+                <div class="number">6</div>
+                <div class="label">家庭成员</div>
+            </div>
+            <div class="info-card">
+                <div class="number">~4200</div>
+                <div class="label">总公里数</div>
+            </div>
+            <div class="info-card">
+                <div class="number">6</div>
+                <div class="label">城市/景点</div>
+            </div>
+        </div>
+
+        <h2 class="section-title">📍 固定行程 Day 1-9</h2>
+
+        <!-- Day 1 -->
+        <div class="day-card">
+            <div class="day-header driving">
+                <div>
+                    <div class="day-number">Day 1</div>
+                    <div class="day-date">2月12日 周四</div>
+                </div>
+                <div>🚗 赶路</div>
+            </div>
+            <div class="day-content">
+                <div class="route">
+                    <span class="location">北京</span>
+                    <span class="arrow">→</span>
+                    <span class="location highlight">信阳</span>
+                </div>
+                <div class="details">
+                    <span class="distance">约900km · 9小时</span>
+                    <p>全天赶路，早出发。晚上找房车营地或服务区休息。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Day 2 -->
+        <div class="day-card">
+            <div class="day-header driving">
+                <div>
+                    <div class="day-number">Day 2</div>
+                    <div class="day-date">2月13日 周五</div>
+                </div>
+                <div>🚗 赶路</div>
+            </div>
+            <div class="day-content">
+                <div class="route">
+                    <span class="location">信阳</span>
+                    <span class="arrow">→</span>
+                    <span class="location highlight">张家界</span>
+                </div>
+                <div class="details">
+                    <span class="distance">约550km · 6小时</span>
+                    <p>傍晚抵达张家界，可逛溪布街感受当地氛围。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Day 3 -->
+        <div class="day-card">
+            <div class="day-header sightseeing">
+                <div>
+                    <div class="day-number">Day 3</div>
+                    <div class="day-date">2月14日 周六</div>
+                </div>
+                <div>⛰️ 游玩</div>
+            </div>
+            <div class="day-content">
+                <div class="route">
+                    <span class="location highlight">张家界国家森林公园</span>
+                </div>
+                <div class="activities">
+                    <div class="activity">
+                        <span class="activity-icon">🏔️</span>
+                        <span class="activity-text"><strong>金鞭溪</strong> - 溪水潺潺，适合漫步</span>
+                    </div>
+                    <div class="activity">
+                        <span class="activity-icon">🎬</span>
+                        <span class="activity-text"><strong>袁家界</strong> - 阿凡达悬浮山取景地</span>
+                    </div>
+                    <div class="activity">
+                        <span class="activity-icon">🚡</span>
+                        <span class="activity-text"><strong>百龙天梯</strong> - 世界最高户外电梯</span>
+                    </div>
+                </div>
+                <div class="food-section">
+                    <h4>🍜 推荐美食</h4>
+                    <p>三下锅、土家腊肉</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Day 4 -->
+        <div class="day-card">
+            <div class="day-header mixed">
+                <div>
+                    <div class="day-number">Day 4</div>
+                    <div class="day-date">2月15日 周日</div>
+                </div>
+                <div>🚗 + 🏘️</div>
+            </div>
+            <div class="day-content">
+                <div class="route">
+                    <span class="location">张家界</span>
+                    <span class="arrow">→</span>
+                    <span class="location highlight">西江千户苗寨</span>
+                </div>
+                <div class="details">
+                    <span class="distance">约350km · 5小时</span>
+                    <p>下午抵达苗寨，办理入住。傍晚观景台看全景，熟悉环境。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Day 5 -->
+        <div class="day-card">
+            <div class="day-header festival">
+                <div>
+                    <div class="day-number">Day 5</div>
+                    <div class="day-date">2月16日 周一 · 除夕</div>
+                </div>
+                <div>🧧 除夕</div>
+            </div>
+            <div class="day-content">
+                <div class="route">
+                    <span class="location highlight">西江千户苗寨</span>
+                </div>
+                <div class="activities">
+                    <div class="activity">
+                        <span class="activity-icon">👗</span>
+                        <span class="activity-text"><strong>苗族服装体验</strong> - 带孩子穿苗服拍照</span>
+                    </div>
+                    <div class="activity">
+                        <span class="activity-icon">🎨</span>
+                        <span class="activity-text"><strong>蜡染/银饰</strong> - 体验苗族手工艺</span>
+                    </div>
+                    <div class="activity">
+                        <span class="activity-icon">🍖</span>
+                        <span class="activity-text"><strong>长桌宴年夜饭</strong> - 一家人围坐，特别的除夕</span>
+                    </div>
+                    <div class="activity">
+                        <span class="activity-icon">✨</span>
+                        <span class="activity-text"><strong>万家灯火</strong> - 千户苗寨璀璨夜景</span>
+                    </div>
+                </div>
+                <div class="food-section">
+                    <h4>🍜 除夕特色</h4>
+                    <p>长桌宴、酸汤鱼、糯米饭、腊肉</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Day 6 -->
+        <div class="day-card">
+            <div class="day-header festival">
+                <div>
+                    <div class="day-number">Day 6</div>
+                    <div class="day-date">2月17日 周二 · 初一</div>
+                </div>
+                <div>🎆 初一</div>
+            </div>
+            <div class="day-content">
+                <div class="route">
+                    <span class="location">西江苗寨</span>
+                    <span class="arrow">→</span>
+                    <span class="location highlight">镇远古镇</span>
+                </div>
+                <div class="details">
+                    <span class="distance">约150km · 2.5小时</span>
+                </div>
+                <div class="activities">
+                    <div class="activity">
+                        <span class="activity-icon">🌅</span>
+                        <span class="activity-text"><strong>上午</strong> - 苗寨继续逛，看苗族新年表演</span>
+                    </div>
+                    <div class="activity">
+                        <span class="activity-icon">🚗</span>
+                        <span class="activity-text"><strong>下午</strong> - 出发前往镇远</span>
+                    </div>
+                    <div class="activity">
+                        <span class="activity-icon">🌙</span>
+                        <span class="activity-text"><strong>晚上</strong> - 夜游舞阳河，古镇夜景</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Day 7 -->
+        <div class="day-card">
+            <div class="day-header mixed">
+                <div>
+                    <div class="day-number">Day 7</div>
+                    <div class="day-date">2月18日 周三 · 初二</div>
+                </div>
+                <div>🚗 + 🏙️</div>
+            </div>
+            <div class="day-content">
+                <div class="route">
+                    <span class="location">镇远</span>
+                    <span class="arrow">→</span>
+                    <span class="location highlight">贵阳</span>
+                </div>
+                <div class="details">
+                    <span class="distance">约280km · 3.5小时</span>
+                </div>
+                <div class="activities">
+                    <div class="activity">
+                        <span class="activity-icon">🐒</span>
+                        <span class="activity-text"><strong>黔灵山公园</strong> - 看猴子，孩子最爱！</span>
+                    </div>
+                    <div class="activity">
+                        <span class="activity-icon">🏛️</span>
+                        <span class="activity-text"><strong>甲秀楼</strong> - 贵阳地标</span>
+                    </div>
+                </div>
+                <p style="color:#888; margin-top:10px;">【贵阳第1晚】</p>
+            </div>
+        </div>
+
+        <!-- Day 8 -->
+        <div class="day-card">
+            <div class="day-header sightseeing">
+                <div>
+                    <div class="day-number">Day 8</div>
+                    <div class="day-date">2月19日 周四 · 初三</div>
+                </div>
+                <div>🏙️ 游玩</div>
+            </div>
+            <div class="day-content">
+                <div class="route">
+                    <span class="location highlight">贵阳</span>
+                </div>
+                <div class="activities">
+                    <div class="activity">
+                        <span class="activity-icon">🏘️</span>
+                        <span class="activity-text"><strong>青岩古镇</strong> - 600年历史古镇</span>
+                    </div>
+                    <div class="activity">
+                        <span class="activity-icon">🌸</span>
+                        <span class="activity-text"><strong>花溪公园</strong> - 或休整放松</span>
+                    </div>
+                </div>
+                <div class="food-section">
+                    <h4>🍜 贵阳必吃</h4>
+                    <p>酸汤鱼、丝娃娃、肠旺面、恋爱豆腐果</p>
+                </div>
+                <p style="color:#888; margin-top:10px;">【贵阳第2晚】</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">🔀 Day 9 起：两个方案</h2>
+
+        <!-- Option A -->
+        <div class="option-box option-a">
+            <h2>🌿 方案A：赤水版（有游玩）</h2>
+            <div class="option-summary">
+                <strong>特点：</strong>顺路去赤水，体验丹霞地貌+瀑布+竹海<br>
+                <strong>亮点：</strong>冷门景点、2岁友好、与广西喀斯特不重复
+            </div>
+            
+            <div class="option-day">
+                <div class="day-label">Day 9 · 2/20 初四</div>
+                <div class="route-text">贵阳 → 赤水</div>
+                <div class="distance-text">300km · 4h（可在遵义午餐）</div>
+                <div class="activity" style="margin-top:8px;">
+                    <span class="activity-icon">💦</span>
+                    <span>下午：十丈洞瀑布（76米落差，震撼！）</span>
+                </div>
+            </div>
+            
+            <div class="option-day">
+                <div class="day-label">Day 10 · 2/21 初五</div>
+                <div class="route-text">赤水 → 重庆</div>
+                <div class="distance-text">250km · 3h</div>
+                <div class="activity" style="margin-top:8px;">
+                    <span class="activity-icon">🎋</span>
+                    <span>上午：赤水竹海 或 四洞沟</span>
+                </div>
+                <div style="color:#888; font-size:0.9em; margin-top:5px;">重庆只住宿，不安排景点</div>
+            </div>
+            
+            <div class="option-day">
+                <div class="day-label">Day 11 · 2/22 初六</div>
+                <div class="route-text">重庆 → 三门峡</div>
+                <div class="distance-text">850km · 9h（辛苦赶路日）</div>
+            </div>
+            
+            <div class="option-day">
+                <div class="day-label">Day 12 · 2/23 初七</div>
+                <div class="route-text">三门峡 → 北京 🏠</div>
+                <div class="distance-text">650km · 7h · 下午到家</div>
+            </div>
+        </div>
+
+        <!-- Option B -->
+        <div class="option-box option-b">
+            <h2>🚀 方案B：最快回京（纯赶路）</h2>
+            <div class="option-summary">
+                <strong>特点：</strong>原路返回，走熟悉的路，最轻松<br>
+                <strong>亮点：</strong>每天≤7小时，不折腾
+            </div>
+            
+            <div class="option-day">
+                <div class="day-label">Day 9 · 2/20 初四</div>
+                <div class="route-text">贵阳（上午）→ 怀化</div>
+                <div class="distance-text">400km · 5h · 轻松半天</div>
+            </div>
+            
+            <div class="option-day">
+                <div class="day-label">Day 10 · 2/21 初五</div>
+                <div class="route-text">怀化 → 信阳</div>
+                <div class="distance-text">650km · 7h · 走来时的路</div>
+            </div>
+            
+            <div class="option-day">
+                <div class="day-label">Day 11 · 2/22 初六</div>
+                <div class="route-text">信阳 → 北京 🏠</div>
+                <div class="distance-text">700km · 7h · 下午到家</div>
+            </div>
+            
+            <div class="option-day" style="background:#f0f0f0; border-radius:10px;">
+                <div class="day-label">Day 12 · 2/23 初七</div>
+                <div style="color:#888;">在家休整，准备上班</div>
+            </div>
+        </div>
+
+        <!-- Comparison -->
+        <div class="option-box">
+            <h2>📊 方案对比</h2>
+            <table class="comparison-table">
+                <tr>
+                    <th>项目</th>
+                    <th>方案A 赤水版</th>
+                    <th>方案B 最快回京</th>
+                </tr>
+                <tr>
+                    <td>到家日期</td>
+                    <td>2/23 初七</td>
+                    <td>2/22 初六</td>
+                </tr>
+                <tr>
+                    <td>新景点</td>
+                    <td>✅ 赤水瀑布+竹海</td>
+                    <td>❌ 无</td>
+                </tr>
+                <tr>
+                    <td>最长单日驾驶</td>
+                    <td>9h</td>
+                    <td>7h</td>
+                </tr>
+                <tr>
+                    <td>回头路</td>
+                    <td>否（环线）</td>
+                    <td>是</td>
+                </tr>
+                <tr>
+                    <td>适合</td>
+                    <td>想多玩一站</td>
+                    <td>想早点到家休息</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Tips Section -->
+        <div class="tips-section">
+            <h2>💡 出行贴士</h2>
+            <div class="tip-grid">
+                <div class="tip-item">
+                    <h4>🌡️ 天气</h4>
+                    <p>贵州2月阴冷潮湿，8-15°C，体感比北京冷。带好防水外套和保暖衣物。</p>
+                </div>
+                <div class="tip-item">
+                    <h4>👶 带娃</h4>
+                    <p>每2小时停车休息，准备零食玩具。午睡时间赶路最高效。</p>
+                </div>
+                <div class="tip-item">
+                    <h4>👴 老人</h4>
+                    <p>景区多台阶，穿防滑鞋。黔灵山较平缓，适合老人。</p>
+                </div>
+                <div class="tip-item">
+                    <h4>🚐 房车</h4>
+                    <p>提前确认营地，春节热门景区需预订。检查暖气/驻车加热器。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Food Map -->
+        <div class="tips-section">
+            <h2>🍜 美食地图</h2>
+            <div class="tip-grid">
+                <div class="tip-item">
+                    <h4>张家界</h4>
+                    <p>三下锅、土家腊肉</p>
+                </div>
+                <div class="tip-item">
+                    <h4>西江苗寨</h4>
+                    <p>长桌宴、酸汤鱼、糯米饭</p>
+                </div>
+                <div class="tip-item">
+                    <h4>镇远</h4>
+                    <p>酸汤粉、豆花</p>
+                </div>
+                <div class="tip-item">
+                    <h4>贵阳</h4>
+                    <p>丝娃娃、肠旺面、酸汤鱼</p>
+                </div>
+                <div class="tip-item">
+                    <h4>赤水（方案A）</h4>
+                    <p>竹笋宴、豆花</p>
+                </div>
+                <div class="tip-item">
+                    <h4>重庆（方案A）</h4>
+                    <p>火锅、小面</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>🚐 祝旅途愉快，新春快乐！🧧</p>
+            <p style="margin-top: 10px; font-size: 0.9em;">生成于 2026年2月</p>
+        </div>
+    </div>
+</body>
+</html>
