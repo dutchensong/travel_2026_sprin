@@ -62,6 +62,28 @@
             color: white;
             font-size: 0.9em;
         }
+        .view-toggle {
+            display: flex;
+            background: rgba(255,255,255,0.2);
+            border-radius: 25px;
+            padding: 5px;
+            margin: 15px 0;
+        }
+        .view-toggle button {
+            flex: 1;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 20px;
+            background: transparent;
+            color: white;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+        .view-toggle button.active {
+            background: white;
+            color: #667eea;
+        }
         .category {
             background: white;
             border-radius: 15px;
@@ -143,6 +165,13 @@
         .item.checked label {
             text-decoration: line-through;
             color: #aaa;
+        }
+        .item .location-tag {
+            font-size: 0.75em;
+            background: #f0f0f0;
+            padding: 2px 8px;
+            border-radius: 10px;
+            color: #888;
         }
         .item .delete-btn {
             background: none;
@@ -233,6 +262,11 @@
             <div class="progress-text"><span id="checkedCount">0</span> / <span id="totalCount">0</span> 已完成</div>
         </div>
 
+        <div class="view-toggle">
+            <button id="btnLocation" class="active" onclick="setView('location')">📍 按位置</button>
+            <button id="btnCategory" onclick="setView('category')">📦 按类别</button>
+        </div>
+
         <div class="actions">
             <button class="btn-refresh" onclick="loadFromCloud()">🔄 刷新同步</button>
             <button class="btn-reset" onclick="resetAll()">↩️ 重置勾选</button>
@@ -253,8 +287,11 @@
         const JSONBIN_API_KEY = '$2a$10$SpbN3KQaiupVhConl6cF7.lS2XPMR3S5Bnue5PnqCfOe.z/sIE.ES';
         const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
 
-        // 初始数据
-        const initialData = {
+        // 当前视图
+        let currentView = 'location';
+
+        // 按位置分类的数据
+        const dataByLocation = {
             "📍 厨房顶部吊柜 1（烹饪相关）": {
                 "物品": [
                     "调味料全套（盐、酱油、醋、油、老干妈、蚝油）",
@@ -419,18 +456,189 @@
             }
         };
 
-        let data = JSON.parse(JSON.stringify(initialData));
+        // 按类别分类的数据
+        const dataByCategory = {
+            "🍜 食物": {
+                "主食/干粮": [
+                    "挂面/方便面",
+                    "米（小袋）",
+                    "八宝粥 ×6罐",
+                    "面包/蛋糕",
+                    "饼干 ×多包"
+                ],
+                "零食（孩子）": [
+                    "孩子零食（小馒头、溶豆、奶酪棒）",
+                    "果泥、肉泥",
+                    "水果条/果干"
+                ],
+                "需冷藏": [
+                    "鸡蛋",
+                    "牛奶",
+                    "速冻丸子（火锅用）",
+                    "火腿肠",
+                    "新鲜蔬菜水果（路上买）"
+                ],
+                "罐头/咸菜": [
+                    "榨菜/咸菜",
+                    "午餐肉罐头"
+                ],
+                "饮品": [
+                    "矿泉水 ×2箱",
+                    "姜茶包"
+                ]
+            },
+            "🍳 厨房用品": {
+                "调味料": [
+                    "调味料全套（盐、酱油、醋、油、老干妈、蚝油）",
+                    "火锅底料 ×3包",
+                    "蘸料（芝麻酱等）"
+                ],
+                "锅具": [
+                    "电火锅/多功能锅",
+                    "小炒锅/平底锅",
+                    "小奶锅",
+                    "电饭煲",
+                    "车载烧水壶（方便取用处）"
+                ],
+                "炉具": [
+                    "卡式炉",
+                    "气罐 ×4-6罐",
+                    "防风板"
+                ],
+                "餐具": [
+                    "碗 ×6、盘子 ×4",
+                    "筷子 ×6、勺子 ×6、叉子 ×4",
+                    "儿童餐具（2岁）"
+                ],
+                "工具": [
+                    "锅铲、汤勺、漏勺、食品夹",
+                    "水果刀 + 砧板",
+                    "剪刀、开瓶器"
+                ],
+                "收纳/清洁": [
+                    "保鲜袋、保鲜膜",
+                    "密封盒 ×若干",
+                    "车载冰箱/保温箱",
+                    "厨房纸巾",
+                    "洗洁精、洗碗布、钢丝球"
+                ]
+            },
+            "🧴 洗漱/护肤": {
+                "物品": [
+                    "牙刷牙膏 ×6",
+                    "毛巾 ×6",
+                    "浴巾 ×4",
+                    "洗发水、沐浴露",
+                    "护肤品"
+                ]
+            },
+            "👶 宝宝用品": {
+                "日用": [
+                    "尿不湿 ×1包（其余放后备箱）",
+                    "尿不湿 ×2包（备用）",
+                    "湿巾 ×2包（其余放后备箱）",
+                    "湿巾 ×3包（备用）",
+                    "干纸巾"
+                ],
+                "喂养": [
+                    "奶瓶/水杯",
+                    "辅食碗勺",
+                    "围嘴 ×5"
+                ],
+                "其他": [
+                    "儿童马桶圈/便盆",
+                    "折叠推车（2岁）",
+                    "背带/腰凳"
+                ]
+            },
+            "💊 医药": {
+                "常用药": [
+                    "退烧药（美林）",
+                    "感冒药（大人+儿童）",
+                    "止泻药（蒙脱石散）",
+                    "益生菌",
+                    "晕车药"
+                ],
+                "外用": [
+                    "创可贴、碘伏棉片",
+                    "体温计"
+                ],
+                "其他": [
+                    "老人日常药物",
+                    "口罩",
+                    "免洗洗手液"
+                ]
+            },
+            "🛏️ 床品": {
+                "物品": [
+                    "被子/睡袋",
+                    "枕头",
+                    "床单/隔脏睡袋",
+                    "毛毯"
+                ]
+            },
+            "🔌 电子设备": {
+                "物品": [
+                    "充电宝 ×2",
+                    "各种充电线",
+                    "手电筒",
+                    "手机支架",
+                    "相机/充电器"
+                ]
+            },
+            "🚗 车辆/证件": {
+                "证件": [
+                    "身份证 ×6",
+                    "驾照 ×2",
+                    "行驶证",
+                    "医保卡 ×6",
+                    "现金（少量）"
+                ],
+                "工具": [
+                    "搭电线",
+                    "灭火器",
+                    "三角警示牌",
+                    "反光背心"
+                ],
+                "儿童安全": [
+                    "安全座椅（2岁）",
+                    "增高垫（7岁）",
+                    "车窗遮阳帘"
+                ]
+            },
+            "🎮 娱乐": {
+                "物品": [
+                    "iPad + 动画片",
+                    "儿童耳机 ×2",
+                    "绘本 ×5",
+                    "贴纸书/涂色书",
+                    "小玩具",
+                    "自拍杆"
+                ]
+            },
+            "📦 其他": {
+                "物品": [
+                    "保温壶 ×2（装热水）",
+                    "保温杯 ×4",
+                    "纸巾、卷纸",
+                    "消毒湿巾",
+                    "垃圾袋 ×多卷",
+                    "抹布",
+                    "暖宝宝 ×20片",
+                    "雨伞 ×4"
+                ]
+            }
+        };
+
         let checkedItems = {};
         let saveTimeout = null;
 
-        // 更新同步状态显示
         function setSyncStatus(status, text) {
             const el = document.getElementById('syncStatus');
             el.className = 'sync-status ' + status;
             el.textContent = text;
         }
 
-        // 从云端加载
         async function loadFromCloud() {
             setSyncStatus('syncing', '⏳ 同步中...');
             try {
@@ -442,9 +650,6 @@
                 const result = await response.json();
                 if (result.record && result.record.checkedItems) {
                     checkedItems = result.record.checkedItems;
-                    if (result.record.data) {
-                        data = result.record.data;
-                    }
                 }
                 setSyncStatus('synced', '☁️ 已同步');
                 renderCategories();
@@ -454,7 +659,6 @@
             }
         }
 
-        // 保存到云端
         async function saveToCloud() {
             setSyncStatus('syncing', '⏳ 保存中...');
             try {
@@ -466,7 +670,6 @@
                     },
                     body: JSON.stringify({
                         checkedItems: checkedItems,
-                        data: data,
                         lastUpdated: new Date().toISOString()
                     })
                 });
@@ -481,19 +684,28 @@
             }
         }
 
-        // 防抖保存
         function debouncedSave() {
             if (saveTimeout) clearTimeout(saveTimeout);
             saveTimeout = setTimeout(saveToCloud, 1000);
         }
 
-        function getItemId(category, subcategory, item) {
-            return `${category}-${subcategory}-${item}`.replace(/\s/g, '_');
+        // 生成统一的物品ID（确保两种视图下同一物品ID一致）
+        function getItemId(item) {
+            return item.replace(/\s/g, '_').replace(/[()（）]/g, '');
+        }
+
+        function setView(view) {
+            currentView = view;
+            document.getElementById('btnLocation').className = view === 'location' ? 'active' : '';
+            document.getElementById('btnCategory').className = view === 'category' ? 'active' : '';
+            renderCategories();
         }
 
         function renderCategories() {
             const container = document.getElementById('categories');
             container.innerHTML = '';
+
+            const data = currentView === 'location' ? dataByLocation : dataByCategory;
 
             let totalItems = 0;
             let checkedCount = 0;
@@ -508,7 +720,7 @@
                 for (const [subName, items] of Object.entries(subcategories)) {
                     categoryTotal += items.length;
                     items.forEach(item => {
-                        const id = getItemId(categoryName, subName, item);
+                        const id = getItemId(item);
                         if (checkedItems[id]) categoryChecked++;
                     });
                 }
@@ -531,24 +743,18 @@
                             <div class="subcategory">
                                 <h3>${subName}</h3>
                                 ${items.map(item => {
-                                    const id = getItemId(categoryName, subName, item);
+                                    const id = getItemId(item);
                                     const isChecked = checkedItems[id];
                                     return `
                                         <div class="item ${isChecked ? 'checked' : ''}">
-                                            <input type="checkbox" id="${id}" ${isChecked ? 'checked' : ''} 
-                                                onchange="toggleItem('${categoryName}', '${subName}', '${item.replace(/'/g, "\\'")}')">
-                                            <label for="${id}">${item}</label>
-                                            <button class="delete-btn" onclick="deleteItem('${categoryName}', '${subName}', '${item.replace(/'/g, "\\'")}')">×</button>
+                                            <input type="checkbox" id="chk_${id}" ${isChecked ? 'checked' : ''} 
+                                                onchange="toggleItem('${item.replace(/'/g, "\\'")}')">
+                                            <label for="chk_${id}">${item}</label>
                                         </div>
                                     `;
                                 }).join('')}
                             </div>
                         `).join('')}
-                        <div class="add-item">
-                            <input type="text" placeholder="添加新物品..." id="newItem-${categoryName.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_')}" 
-                                onkeypress="if(event.key==='Enter')addItem('${categoryName}')">
-                            <button onclick="addItem('${categoryName}')">添加</button>
-                        </div>
                     </div>
                 `;
 
@@ -565,42 +771,11 @@
             header.parentElement.classList.toggle('collapsed');
         }
 
-        function toggleItem(category, subcategory, item) {
-            const id = getItemId(category, subcategory, item);
+        function toggleItem(item) {
+            const id = getItemId(item);
             checkedItems[id] = !checkedItems[id];
             renderCategories();
             debouncedSave();
-        }
-
-        function deleteItem(category, subcategory, item) {
-            if (confirm(`确定删除"${item}"吗？`)) {
-                const index = data[category][subcategory].indexOf(item);
-                if (index > -1) {
-                    data[category][subcategory].splice(index, 1);
-                    const id = getItemId(category, subcategory, item);
-                    delete checkedItems[id];
-                    renderCategories();
-                    debouncedSave();
-                }
-            }
-        }
-
-        function addItem(category) {
-            const inputId = `newItem-${category.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_')}`;
-            const input = document.getElementById(inputId);
-            const item = input.value.trim();
-            
-            if (item) {
-                const firstSubcategory = Object.keys(data[category])[0];
-                data[category][firstSubcategory].push(item);
-                renderCategories();
-                debouncedSave();
-                
-                setTimeout(() => {
-                    const newInput = document.getElementById(inputId);
-                    if (newInput) newInput.value = '';
-                }, 0);
-            }
         }
 
         function resetAll() {
@@ -611,7 +786,7 @@
             }
         }
 
-        // 初始化：从云端加载
+        // 初始化
         loadFromCloud();
     </script>
 </body>
