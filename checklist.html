@@ -67,20 +67,26 @@
         }
         .item {
             display: flex; align-items: center; padding: 10px 0;
-            border-bottom: 1px solid #f0f0f0; gap: 12px;
+            border-bottom: 1px solid #f0f0f0; gap: 10px;
         }
         .item:last-child { border-bottom: none; }
         .item input[type="checkbox"] {
             width: 22px; height: 22px; cursor: pointer; accent-color: #667eea;
+            flex-shrink: 0;
         }
         .item label { flex: 1; cursor: pointer; font-size: 0.95em; }
         .item.checked label { text-decoration: line-through; color: #aaa; }
         .item .delete-btn {
-            background: none; border: none; color: #ddd; cursor: pointer;
-            font-size: 1.2em; padding: 5px; opacity: 0; transition: opacity 0.2s;
+            background: #f8f8f8; border: none; color: #ccc; cursor: pointer;
+            font-size: 1em; padding: 6px 10px; border-radius: 6px;
+            flex-shrink: 0; transition: all 0.2s;
         }
-        .item:hover .delete-btn { opacity: 1; }
-        .item .delete-btn:hover { color: #f5576c; }
+        .item .delete-btn:hover, .item .delete-btn:active {
+            background: #fee; color: #f5576c;
+        }
+        @media (max-width: 480px) {
+            .item .delete-btn { padding: 8px 12px; font-size: 1.1em; }
+        }
         .add-item {
             display: flex; gap: 10px; margin-top: 15px; padding-top: 15px;
             border-top: 1px dashed #ddd;
@@ -127,7 +133,7 @@
             <button class="btn-reset" onclick="resetAll()">↩️ 重置勾选</button>
         </div>
         <div id="categories"></div>
-        <div class="footer">☁️ 数据自动云端同步<br>2026春节房车行程配套清单<br>v1.3</div>
+        <div class="footer">☁️ 数据自动云端同步<br>2026春节房车行程配套清单<br>v1.4</div>
     </div>
 <script>
 const JSONBIN_BIN_ID = '6982bb0aae596e708f0f87b5';
@@ -159,6 +165,7 @@ const dataByCategory = {
 };
 let checkedItems = {};
 let customItems = {};
+let deletedItems = {};
 let saveTimeout = null;
 
 function setSyncStatus(status, text) {
@@ -179,6 +186,7 @@ async function loadFromCloud() {
         if (result.record) {
             checkedItems = result.record.checkedItems || {};
             customItems = result.record.customItems || {};
+            deletedItems = result.record.deletedItems || {};
         }
         setSyncStatus('synced', '☁️ 已同步');
         renderCategories();
@@ -201,6 +209,7 @@ async function saveToCloud() {
             body: JSON.stringify({
                 checkedItems: checkedItems,
                 customItems: customItems,
+                deletedItems: deletedItems,
                 lastUpdated: new Date().toISOString()
             })
         });
@@ -242,8 +251,9 @@ function renderCategories() {
         const customInCat = customItems[catKey] || [];
 
         for (const [subName, items] of Object.entries(subcategories)) {
-            categoryTotal += items.length;
-            items.forEach(item => { if (checkedItems[getItemId(item)]) categoryChecked++; });
+            const visibleItems = items.filter(item => !deletedItems[getItemId(item)]);
+            categoryTotal += visibleItems.length;
+            visibleItems.forEach(item => { if (checkedItems[getItemId(item)]) categoryChecked++; });
         }
         categoryTotal += customInCat.length;
         customInCat.forEach(item => { if (checkedItems[getItemId(item)]) categoryChecked++; });
@@ -260,14 +270,17 @@ function renderCategories() {
             '<div class="category-content">';
 
         for (const [subName, items] of Object.entries(subcategories)) {
+            const visibleItems = items.filter(item => !deletedItems[getItemId(item)]);
+            if (visibleItems.length === 0) continue;
             html += '<div class="subcategory"><h3>' + subName + '</h3>';
-            items.forEach(item => {
+            visibleItems.forEach(item => {
                 const id = getItemId(item);
                 const isChecked = checkedItems[id];
                 html += '<div class="item ' + (isChecked ? 'checked' : '') + '">' +
                     '<input type="checkbox" id="c_' + id + '" ' + (isChecked ? 'checked' : '') +
                     ' onchange="toggleItem(\'' + item.replace(/'/g, "\\'") + '\')">' +
-                    '<label for="c_' + id + '">' + item + '</label></div>';
+                    '<label for="c_' + id + '">' + item + '</label>' +
+                    '<button class="delete-btn" onclick="deleteDefaultItem(\'' + item.replace(/'/g, "\\'") + '\')">×</button></div>';
             });
             html += '</div>';
         }
@@ -281,7 +294,7 @@ function renderCategories() {
                     '<input type="checkbox" id="c_' + id + '" ' + (isChecked ? 'checked' : '') +
                     ' onchange="toggleItem(\'' + item.replace(/'/g, "\\'") + '\')">' +
                     '<label for="c_' + id + '">' + item + '</label>' +
-                    '<button class="delete-btn" onclick="deleteItem(\'' + catKey + '\',\'' + item.replace(/'/g, "\\'") + '\')">×</button></div>';
+                    '<button class="delete-btn" onclick="deleteCustomItem(\'' + catKey + '\',\'' + item.replace(/'/g, "\\'") + '\')">×</button></div>';
             });
             html += '</div>';
         }
@@ -320,7 +333,17 @@ function addItem(catKey) {
     }
 }
 
-function deleteItem(catKey, item) {
+function deleteDefaultItem(item) {
+    if (confirm('删除 "' + item + '"？')) {
+        const id = getItemId(item);
+        deletedItems[id] = true;
+        delete checkedItems[id];
+        renderCategories();
+        debouncedSave();
+    }
+}
+
+function deleteCustomItem(catKey, item) {
     if (confirm('删除 "' + item + '"？')) {
         customItems[catKey] = (customItems[catKey] || []).filter(i => i !== item);
         delete checkedItems[getItemId(item)];
