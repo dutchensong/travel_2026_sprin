@@ -127,11 +127,11 @@
             <button class="btn-reset" onclick="resetAll()">↩️ 重置勾选</button>
         </div>
         <div id="categories"></div>
-        <div class="footer">☁️ 数据自动云端同步<br>2026春节房车行程配套清单<br>v1.1</div>
+        <div class="footer">☁️ 数据自动云端同步<br>2026春节房车行程配套清单<br>v1.2</div>
     </div>
 <script>
 const JSONBIN_BIN_ID = '6982bb0aae596e708f0f87b5';
-const JSONBIN_API_KEY = '$2a$10$SpbN3KQaiupVhConl6cF7.lS2XPMR3S5Bnue5PnqCfOe.z/sIE.ES';
+const JSONBIN_API_KEY = '$2a$10$8VR1eiPIR87OBhAg98YYVekkZJej0Yh9fqDcBdvRmc6SppcXuC18.';
 let currentView = 'location';
 const dataByLocation = {
     "📍 厨房顶部吊柜 1（烹饪相关）": {"物品": ["调味料全套（盐、酱油、醋、油、老干妈、蚝油）","火锅底料 ×3包","蘸料（芝麻酱等）","锅铲、汤勺、漏勺、食品夹","水果刀 + 砧板","剪刀、开瓶器"]},
@@ -173,7 +173,7 @@ async function loadFromCloud() {
     try {
         const response = await fetch('https://api.jsonbin.io/v3/b/' + JSONBIN_BIN_ID + '/latest', {
             method: 'GET',
-            headers: { 'X-Access-Key': JSONBIN_API_KEY }
+            headers: { 'X-Master-Key': JSONBIN_API_KEY }
         });
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const result = await response.json();
@@ -197,7 +197,7 @@ async function saveToCloud() {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
-                'X-Access-Key': JSONBIN_API_KEY
+                'X-Master-Key': JSONBIN_API_KEY
             },
             body: JSON.stringify({
                 checkedItems: checkedItems,
